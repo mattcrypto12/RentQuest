@@ -11,6 +11,10 @@ data class WalletSession(
 
 /**
  * Solana cluster/network selection
+ * 
+ * NOTE: Public RPC endpoints are rate-limited. For production,
+ * replace with Helius, QuickNode, or another RPC provider.
+ * Get a free Helius API key at https://helius.dev
  */
 enum class Cluster(
     val displayName: String,
@@ -19,12 +23,12 @@ enum class Cluster(
 ) {
     MAINNET_BETA(
         displayName = "Mainnet-Beta",
-        rpcUrl = "https://api.mainnet-beta.solana.com",
+        rpcUrl = "https://mainnet.helius-rpc.com/?api-key=823a6643-301b-494a-94be-f6ab2ca883b7",
         mwaCluster = "mainnet-beta"
     ),
     DEVNET(
         displayName = "Devnet",
-        rpcUrl = "https://api.devnet.solana.com",
+        rpcUrl = "https://devnet.helius-rpc.com/?api-key=823a6643-301b-494a-94be-f6ab2ca883b7",
         mwaCluster = "devnet"
     );
     

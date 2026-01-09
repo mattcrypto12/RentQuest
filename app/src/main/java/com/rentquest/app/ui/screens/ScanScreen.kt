@@ -28,6 +28,11 @@ fun ScanScreen(
     val walletState by viewModel.walletState.collectAsState()
     val scanState by viewModel.scanState.collectAsState()
     val selectedAccounts by viewModel.selectedAccounts.collectAsState()
+    val sweepPoints by viewModel.currentWalletSweepPoints.collectAsState()
+    val showPointsAnimation by viewModel.showPointsAnimation.collectAsState()
+    val totalWallets by viewModel.totalWalletsWithRent.collectAsState()
+    
+    var showSweepInfoModal by remember { mutableStateOf(false) }
     
     val session = (walletState as? WalletConnectionState.Connected)?.session
     
@@ -36,6 +41,28 @@ fun ScanScreen(
         if (scanState is ScanState.Idle && session != null) {
             viewModel.scanForClosableAccounts()
         }
+        viewModel.loadTotalWallets()
+    }
+    
+    // SWEEP info modal
+    if (showSweepInfoModal) {
+        sweepPoints?.let { points ->
+            SweepInfoModal(
+                currentPoints = points.points,
+                accountsSwept = points.accountsSwept,
+                twitterBonus = points.twitterBonusEarned,
+                totalWallets = totalWallets,
+                onDismiss = { showSweepInfoModal = false }
+            )
+        }
+    }
+    
+    // Points earned popup
+    showPointsAnimation?.let { points ->
+        PointsEarnedPopup(
+            points = points,
+            onDismiss = { viewModel.dismissPointsAnimation() }
+        )
     }
     
     Column(
@@ -43,7 +70,7 @@ fun ScanScreen(
             .fillMaxSize()
             .background(BackgroundDark)
     ) {
-        // Top bar with wallet info
+        // Top bar with wallet info and SWEEP points
         TopAppBar(
             title = {
                 Column {
@@ -57,6 +84,14 @@ fun ScanScreen(
                 }
             },
             actions = {
+                // SWEEP Points badge - clickable to show info
+                sweepPoints?.let { points ->
+                    SweepPointsBadge(
+                        points = points.points + points.twitterBonusEarned,
+                        onClick = { showSweepInfoModal = true }
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
                 IconButton(onClick = { viewModel.scanForClosableAccounts() }) {
                     Icon(
                         imageVector = Icons.Default.Refresh,

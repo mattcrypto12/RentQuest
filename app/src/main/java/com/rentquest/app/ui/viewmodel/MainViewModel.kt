@@ -1,5 +1,6 @@
 package com.rentquest.app.ui.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -17,7 +18,8 @@ import kotlinx.coroutines.launch
  * Manages wallet connection, scanning, closing, and settings state
  */
 class MainViewModel(
-    private val dataStoreManager: DataStoreManager
+    private val dataStoreManager: DataStoreManager,
+    private val appContext: Context
 ) : ViewModel() {
     
     // ==================== Wallet State ====================
@@ -63,6 +65,27 @@ class MainViewModel(
     val onboardingComplete: StateFlow<Boolean> = dataStoreManager.onboardingCompleteFlow
         .stateIn(viewModelScope, SharingStarted.Eagerly, false)
     
+    // ==================== SWEEP Points ====================
+    
+    private val _currentWalletSweepPoints = MutableStateFlow<SweepPoints?>(null)
+    val currentWalletSweepPoints: StateFlow<SweepPoints?> = _currentWalletSweepPoints.asStateFlow()
+    
+    private val _pointsEarnedThisSession = MutableStateFlow(0)
+    val pointsEarnedThisSession: StateFlow<Int> = _pointsEarnedThisSession.asStateFlow()
+    
+    private val _showPointsAnimation = MutableStateFlow<Int?>(null)
+    val showPointsAnimation: StateFlow<Int?> = _showPointsAnimation.asStateFlow()
+    
+    private val _totalWalletsWithRent = MutableStateFlow(0)
+    val totalWalletsWithRent: StateFlow<Int> = _totalWalletsWithRent.asStateFlow()
+    
+    fun loadTotalWallets() {
+        viewModelScope.launch {
+            val allWallets = dataStoreManager.getAllWalletsForAirdrop()
+            _totalWalletsWithRent.value = allWallets.count { it.accountsSwept > 0 }
+        }
+    }
+    
     // ==================== UI Events ====================
     
     private val _showLootAnimation = MutableStateFlow<Double?>(null)
@@ -76,7 +99,7 @@ class MainViewModel(
     private val rpcClient: SolanaRpcClient
         get() {
             val customUrl = if (_useCustomRpc.value) _customRpcUrl.value else null
-            return SolanaRpcClient(customUrl)
+            return SolanaRpcClient(appContext, customUrl)
         }
     
     private val scanUseCase: ScanTokenAccountsUseCase
@@ -120,12 +143,23 @@ class MainViewModel(
                     currentSession = session
                     dataStoreManager.saveSession(session.publicKey, session.authToken)
                     _walletState.value = WalletConnectionState.Connected(session)
+                    
+                    // Load SWEEP points for this wallet
+                    loadSweepPointsForWallet(session.publicKey)
                 }
                 ?.onFailure { error ->
                     _walletState.value = WalletConnectionState.Error(
                         error.message ?: "Failed to connect wallet"
                     )
                 }
+        }
+    }
+    
+    private fun loadSweepPointsForWallet(walletAddress: String) {
+        viewModelScope.launch {
+            dataStoreManager.sweepPointsForWallet(walletAddress).collect { points ->
+                _currentWalletSweepPoints.value = points
+            }
         }
     }
     
@@ -140,6 +174,8 @@ class MainViewModel(
             _scanState.value = ScanState.Idle
             _selectedAccounts.value = emptySet()
             _closeState.value = CloseOperationState.Idle
+            _currentWalletSweepPoints.value = null
+            _pointsEarnedThisSession.value = 0
         }
     }
     
@@ -242,6 +278,19 @@ class MainViewModel(
                             lamportsReclaimed = result.historyEntry.lamportsReclaimed
                         )
                         
+                        // Award SWEEP points
+                        val (updatedPoints, pointsEarned) = dataStoreManager.awardSweepPoints(
+                            walletAddress = session.publicKey,
+                            accountsSwept = result.historyEntry.accountsClosed
+                        )
+                        _currentWalletSweepPoints.value = updatedPoints
+                        _pointsEarnedThisSession.value += pointsEarned
+                        
+                        // Show points animation if earned any
+                        if (pointsEarned > 0) {
+                            _showPointsAnimation.value = pointsEarned
+                        }
+                        
                         // Show loot animation
                         if (result.historyEntry.lamportsReclaimed > 0) {
                             _showLootAnimation.value = result.historyEntry.solReclaimed
@@ -271,6 +320,10 @@ class MainViewModel(
         _showLootAnimation.value = null
     }
     
+    fun dismissPointsAnimation() {
+        _showPointsAnimation.value = null
+    }
+    
     fun dismissAchievement() {
         val current = _pendingAchievements.value
         if (current.isNotEmpty()) {
@@ -278,6 +331,73 @@ class MainViewModel(
         }
     }
     
+    // ==================== Twitter Share ====================
+    
+    private val _showTwitterBonusEarned = MutableStateFlow(false)
+    val showTwitterBonusEarned: StateFlow<Boolean> = _showTwitterBonusEarned.asStateFlow()
+    
+    /**
+     * Generate share text for Twitter
+     */
+    fun getTwitterShareText(rentCollected: Double, accountsClosed: Int): String {
+        val solAmount = String.format("%.4f", rentCollected)
+        return "Just swept $accountsClosed empty token accounts and collected $solAmount SOL in rent with @RentQuestApp!\n\n" +
+               "+$accountsClosed SWEEP points earned\n\n" +
+               "Stop leaving rent locked in dead tokens\n" +
+               "https://dappstore.solanamobile.com/apps/rentquest\n\n" +
+               "#Solana #SolanaSeeker #RentQuest"
+    }
+    
+    private val _twitterBonusAmount = MutableStateFlow(0)
+    val twitterBonusAmount: StateFlow<Int> = _twitterBonusAmount.asStateFlow()
+    
+    private val _alreadySharedThisEntry = MutableStateFlow(false)
+    val alreadySharedThisEntry: StateFlow<Boolean> = _alreadySharedThisEntry.asStateFlow()
+    
+    /**
+     * Check if a specific close operation has already been shared
+     */
+    fun checkIfAlreadyShared(historyId: String) {
+        val session = currentSession ?: return
+        viewModelScope.launch {
+            _alreadySharedThisEntry.value = dataStoreManager.hasSharedHistoryEntry(session.publicKey, historyId)
+        }
+    }
+    
+    /**
+     * Called when user initiates Twitter share - awards bonus points = accounts closed
+     * Only awards once per historyId to prevent double-claiming
+     */
+    fun onTwitterShareInitiated(historyId: String, accountsClosed: Int) {
+        val session = currentSession ?: return
+        
+        viewModelScope.launch {
+            val (updatedPoints, bonusAwarded, wasAlreadyShared) = dataStoreManager.awardTwitterShareBonus(
+                session.publicKey, 
+                historyId, 
+                accountsClosed
+            )
+            _currentWalletSweepPoints.value = updatedPoints
+            
+            if (wasAlreadyShared) {
+                // Already shared this close operation - no bonus
+                _alreadySharedThisEntry.value = true
+            } else if (bonusAwarded > 0) {
+                _twitterBonusAmount.value = bonusAwarded
+                _showTwitterBonusEarned.value = true
+                _alreadySharedThisEntry.value = true
+            }
+        }
+    }
+    
+    fun dismissTwitterBonusEarned() {
+        _showTwitterBonusEarned.value = false
+    }
+    
+    fun resetShareState() {
+        _alreadySharedThisEntry.value = false
+    }
+
     // ==================== Settings Actions ====================
     
     fun setCluster(cluster: Cluster) {
@@ -340,12 +460,13 @@ class MainViewModel(
  * Factory for creating MainViewModel with dependencies
  */
 class MainViewModelFactory(
-    private val dataStoreManager: DataStoreManager
+    private val dataStoreManager: DataStoreManager,
+    private val appContext: Context
 ) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
-            return MainViewModel(dataStoreManager) as T
+            return MainViewModel(dataStoreManager, appContext) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

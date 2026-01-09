@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <!-- Deep purple gradient background -->
+    <path
+        android:fillColor="#0D0D1A"
+        android:pathData="M0,0 L108,0 L108,108 L0,108 Z"/>
+    
+    <!-- Outer glow ring -->
+    <path
+        android:fillColor="#1A1030"
+        android:pathData="M54,54 m-52,0 a52,52 0 1,1 104,0 a52,52 0 1,1 -104,0"/>
+    
+    <!-- Inner glow -->
+    <path
+        android:fillColor="#251845"
+        android:pathData="M54,54 m-40,0 a40,40 0 1,1 80,0 a40,40 0 1,1 -80,0"/>
+    
+    <!-- Center highlight -->
+    <path
+        android:fillColor="#301860"
+        android:pathData="M54,54 m-28,0 a28,28 0 1,1 56,0 a28,28 0 1,1 -56,0"/>
+    
+</vector>

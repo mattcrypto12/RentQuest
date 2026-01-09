@@ -32,7 +32,10 @@ class MainActivity : ComponentActivity() {
     private lateinit var activityResultSender: ActivityResultSender
     
     private val viewModel: MainViewModel by viewModels {
-        MainViewModelFactory((application as RentQuestApp).dataStoreManager)
+        MainViewModelFactory(
+            (application as RentQuestApp).dataStoreManager,
+            applicationContext
+        )
     }
     
     override fun onCreate(savedInstanceState: Bundle?) {

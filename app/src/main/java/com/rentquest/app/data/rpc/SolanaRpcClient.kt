@@ -1,5 +1,8 @@
 package com.rentquest.app.data.rpc
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import com.rentquest.app.data.solana.SolanaBase58
 import com.rentquest.app.domain.model.Cluster
 import com.rentquest.app.domain.model.TokenAccount
@@ -14,11 +17,13 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.concurrent.TimeUnit
+import javax.net.SocketFactory
 
 /**
  * Client for Solana JSON-RPC API
  */
 class SolanaRpcClient(
+    context: Context? = null,
     private val customRpcUrl: String? = null
 ) {
     private val json = Json { 
@@ -26,11 +31,65 @@ class SolanaRpcClient(
         isLenient = true
     }
     
-    private val httpClient = OkHttpClient.Builder()
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
-        .writeTimeout(30, TimeUnit.SECONDS)
-        .build()
+    private val httpClient: OkHttpClient
+    private val appContext: Context? = context
+    
+    init {
+        val builder = OkHttpClient.Builder()
+            .connectTimeout(60, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
+            .retryOnConnectionFailure(true)
+        
+        // Find and bind to WiFi network specifically
+        if (context != null) {
+            try {
+                val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+                
+                android.util.Log.e("SolanaRpcClient", "=== NETWORK DEBUG ===")
+                
+                // Try to find WiFi network specifically (wlan0, not tun*)
+                var wifiNetwork: android.net.Network? = null
+                for (network in cm.allNetworks) {
+                    val caps = cm.getNetworkCapabilities(network)
+                    val linkProps = cm.getLinkProperties(network)
+                    val interfaceName = linkProps?.interfaceName ?: ""
+                    val isRealWifi = interfaceName.startsWith("wlan")
+                    val hasInternet = caps?.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+                    
+                    android.util.Log.e("SolanaRpcClient", "Network: $network, interface: $interfaceName, isRealWifi: $isRealWifi, Internet: $hasInternet")
+                    
+                    // Prefer wlan0 over tun* interfaces
+                    if (isRealWifi && hasInternet) {
+                        wifiNetwork = network
+                        android.util.Log.e("SolanaRpcClient", "Found real WiFi network: $network ($interfaceName)")
+                        break  // Use first real WiFi found
+                    }
+                }
+                
+                val networkToBind = wifiNetwork ?: cm.activeNetwork
+                
+                if (networkToBind != null) {
+                    val linkProps = cm.getLinkProperties(networkToBind)
+                    android.util.Log.e("SolanaRpcClient", "Binding to network: $networkToBind")
+                    android.util.Log.e("SolanaRpcClient", "Interface: ${linkProps?.interfaceName}")
+                    android.util.Log.e("SolanaRpcClient", "Link addresses: ${linkProps?.linkAddresses}")
+                    android.util.Log.e("SolanaRpcClient", "DNS servers: ${linkProps?.dnsServers}")
+                    
+                    val socketFactory = networkToBind.getSocketFactory()
+                    builder.socketFactory(socketFactory)
+                } else {
+                    android.util.Log.e("SolanaRpcClient", "No network found!")
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("SolanaRpcClient", "Failed to setup network: ${e.message}", e)
+            }
+        } else {
+            android.util.Log.e("SolanaRpcClient", "No context provided - using default network")
+        }
+        
+        httpClient = builder.build()
+    }
     
     private fun getRpcUrl(cluster: Cluster): String {
         return customRpcUrl ?: cluster.rpcUrl
@@ -83,7 +142,7 @@ class SolanaRpcClient(
         
         val request = JsonRpcRequest(
             method = "getTokenAccountsByOwner",
-            params = params.toList()
+            params = params
         )
         
         val responseBody = executeRequest(getRpcUrl(cluster), request)
@@ -121,7 +180,7 @@ class SolanaRpcClient(
             
             val request = JsonRpcRequest(
                 method = "getLatestBlockhash",
-                params = params.toList()
+                params = params
             )
             
             val responseBody = executeRequest(getRpcUrl(cluster), request)
@@ -160,7 +219,7 @@ class SolanaRpcClient(
             
             val request = JsonRpcRequest(
                 method = "sendTransaction",
-                params = params.toList()
+                params = params
             )
             
             val responseBody = executeRequest(getRpcUrl(cluster), request)
@@ -194,7 +253,7 @@ class SolanaRpcClient(
                 
                 val request = JsonRpcRequest(
                     method = "getSignatureStatuses",
-                    params = params.toList()
+                    params = params
                 )
                 
                 val responseBody = executeRequest(getRpcUrl(cluster), request)
@@ -221,19 +280,29 @@ class SolanaRpcClient(
     }
     
     private fun executeRequest(url: String, rpcRequest: JsonRpcRequest): String {
-        val requestBody = json.encodeToString(rpcRequest)
-            .toRequestBody("application/json".toMediaType())
+        val jsonString = json.encodeToString(rpcRequest)
+        android.util.Log.e("SolanaRpcClient", "REQUEST URL: $url")
+        android.util.Log.e("SolanaRpcClient", "REQUEST BODY: $jsonString")
+        
+        val requestBody = jsonString.toRequestBody("application/json; charset=utf-8".toMediaType())
         
         val request = Request.Builder()
             .url(url)
+            .header("Content-Type", "application/json")
             .post(requestBody)
             .build()
         
         httpClient.newCall(request).execute().use { response ->
+            val body = response.body?.string() ?: ""
+            android.util.Log.e("SolanaRpcClient", "RESPONSE CODE: ${response.code}")
+            android.util.Log.e("SolanaRpcClient", "RESPONSE BODY: $body")
             if (!response.isSuccessful) {
                 throw Exception("HTTP ${response.code}: ${response.message}")
             }
-            return response.body?.string() ?: throw Exception("Empty response body")
+            if (body.isEmpty()) {
+                throw Exception("Empty response body")
+            }
+            return body
         }
     }
 }

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <!-- RentQuest Icon v2: Clean SOL coin with unlock symbol -->
+    
+    <!-- Outer coin ring -->
+    <path
+        android:fillColor="#14F195"
+        android:pathData="M54,18 
+                          A36,36 0 1,1 54,90 
+                          A36,36 0 1,1 54,18 Z
+                          M54,24 
+                          A30,30 0 1,0 54,84 
+                          A30,30 0 1,0 54,24 Z"
+        android:fillType="evenOdd"/>
+    
+    <!-- Inner coin face -->
+    <path
+        android:fillColor="#0FD182"
+        android:pathData="M54,28 
+                          A26,26 0 1,1 54,80 
+                          A26,26 0 1,1 54,28 Z"/>
+    
+    <!-- Center gradient circle -->
+    <path
+        android:fillColor="#14F195"
+        android:pathData="M54,32 
+                          A22,22 0 1,1 54,76 
+                          A22,22 0 1,1 54,32 Z"/>
+    
+    <!-- Unlock padlock body -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M44,52 L64,52 L64,68 L44,68 Z"/>
+    
+    <!-- Padlock shackle (open/unlocked) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M48,52 L48,44 
+                          A6,6 0 0,1 60,44 
+                          L60,46 L56,46 L56,44 
+                          A2,2 0 0,0 52,44 
+                          L52,52 Z"/>
+    
+    <!-- Keyhole -->
+    <path
+        android:fillColor="#14F195"
+        android:pathData="M54,56 
+                          A3,3 0 1,1 54,62 
+                          A3,3 0 1,1 54,56 Z
+                          M52,60 L56,60 L55,66 L53,66 Z"/>
+    
+    <!-- Sparkle top-right -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M78,26 L80,30 L84,32 L80,34 L78,38 L76,34 L72,32 L76,30 Z"/>
+    
+    <!-- Sparkle top-left -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.7"
+        android:pathData="M30,30 L31,32 L33,33 L31,34 L30,36 L29,34 L27,33 L29,32 Z"/>
+    
+    <!-- Sparkle bottom -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.5"
+        android:pathData="M76,72 L77,74 L79,75 L77,76 L76,78 L75,76 L73,75 L75,74 Z"/>
+    
+</vector>
