@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">RentQuest</string>
+    <string name="app_tagline">Wallet Spring Cleaning</string>
+    <string name="connect_wallet">Connect Wallet</string>
+    <string name="disconnect_wallet">Disconnect</string>
+    <string name="scan_wallet">Scan Wallet</string>
+    <string name="reclaim_sol">Reclaim SOL</string>
+    <string name="no_closable_accounts">No closable accounts found</string>
+    <string name="scanning">Scanning your wallet…</string>
+    <string name="connecting">Connecting to wallet…</string>
+    <string name="processing">Processing transactions…</string>
+    <string name="success">Success!</string>
+    <string name="error_occurred">An error occurred</string>
+    <string name="try_again">Try Again</string>
+    <string name="cancel">Cancel</string>
+    <string name="settings">Settings</string>
+    <string name="history">History</string>
+    <string name="about">About</string>
+    <string name="cluster">Network</string>
+    <string name="mainnet">Mainnet-Beta</string>
+    <string name="devnet">Devnet</string>
+    <string name="custom_rpc">Custom RPC</string>
+    <string name="clear_data">Clear Data</string>
+    <string name="total_reclaimed">Total Reclaimed</string>
+    <string name="accounts_closed">Accounts Closed</string>
+</resources>
