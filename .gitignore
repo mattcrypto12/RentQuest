@@ -109,3 +109,8 @@ $RECYCLE.BIN/
 # Secrets
 secrets.properties
 *.secret
+
+# Secrets - DO NOT COMMIT
+publisher-wallet.json
+rentquest-release.keystore
+app/keystore.properties

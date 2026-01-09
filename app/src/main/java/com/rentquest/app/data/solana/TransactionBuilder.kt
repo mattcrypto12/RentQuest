@@ -38,8 +38,8 @@ object TransactionBuilder {
     }
     
     /**
-     * Builds an unsigned transaction message for closing multiple token accounts
-     * Returns the serialized message bytes (ready for signing)
+     * Builds an unsigned transaction for closing multiple token accounts
+     * Returns the full serialized transaction bytes (with empty signature placeholders)
      */
     fun buildCloseAccountsTransaction(
         accounts: List<TokenAccount>,
@@ -98,8 +98,27 @@ object TransactionBuilder {
                 .thenByDescending { it.isWritable }
         )
         
-        // Serialize transaction message
-        return serializeLegacyMessage(sortedAccounts, recentBlockhash, instructions)
+        // Count signers for transaction format
+        val numSigners = sortedAccounts.count { it.isSigner }
+        
+        // Serialize message first
+        val message = serializeLegacyMessage(sortedAccounts, recentBlockhash, instructions)
+        
+        // Build full transaction: signature count + empty signatures + message
+        val output = ByteArrayOutputStream()
+        
+        // Number of signatures (compact-u16)
+        writeCompactU16(output, numSigners)
+        
+        // Empty signature placeholders (64 zero bytes per signer)
+        repeat(numSigners) {
+            output.write(ByteArray(64))
+        }
+        
+        // Message bytes
+        output.write(message)
+        
+        return output.toByteArray()
     }
     
     /**

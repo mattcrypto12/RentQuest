@@ -1,17 +1,21 @@
 package com.rentquest.app.data.rpc
 
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 
 /**
  * JSON-RPC 2.0 Request
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 data class JsonRpcRequest(
-    val jsonrpc: String = "2.0",
-    val id: Int = 1,
+    @EncodeDefault val jsonrpc: String = "2.0",
+    @EncodeDefault val id: Int = 1,
     val method: String,
-    val params: List<JsonElement> = emptyList()
+    @EncodeDefault val params: JsonArray = JsonArray(emptyList())
 )
 
 /**
@@ -20,7 +24,7 @@ data class JsonRpcRequest(
 @Serializable
 data class JsonRpcResponse<T>(
     val jsonrpc: String,
-    val id: Int,
+    val id: Int? = null,
     val result: T? = null,
     val error: JsonRpcError? = null
 )
@@ -61,7 +65,7 @@ data class AccountData(
     val owner: String,
     val data: ParsedAccountData,
     val executable: Boolean,
-    val rentEpoch: Long
+    val rentEpoch: JsonElement? = null  // Can be UInt64 max value, ignore it
 )
 
 @Serializable

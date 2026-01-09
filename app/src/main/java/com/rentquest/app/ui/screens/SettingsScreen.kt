@@ -30,6 +30,7 @@ fun SettingsScreen(
     val cluster by viewModel.cluster.collectAsState()
     val customRpcUrl by viewModel.customRpcUrl.collectAsState()
     val useCustomRpc by viewModel.useCustomRpc.collectAsState()
+    val sweepPoints by viewModel.currentWalletSweepPoints.collectAsState()
     
     var showClearDataDialog by remember { mutableStateOf(false) }
     var customRpcInput by remember { mutableStateOf(customRpcUrl ?: "") }
@@ -54,6 +55,15 @@ fun SettingsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // SWEEP Points section (show when connected)
+            sweepPoints?.let { points ->
+                SweepPointsCard(
+                    points = points.points,
+                    accountsSwept = points.accountsSwept,
+                    twitterBonus = points.twitterBonusEarned
+                )
+            }
+            
             // Wallet section
             SettingsSection(title = "Wallet") {
                 val session = (walletState as? WalletConnectionState.Connected)?.session

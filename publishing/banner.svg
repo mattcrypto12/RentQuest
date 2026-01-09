@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600">
+  <!-- Background gradient -->
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0D0D1A"/>
+      <stop offset="100%" style="stop-color:#1A1030"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="600" fill="url(#bgGrad)"/>
+  
+  <!-- Decorative circles -->
+  <circle cx="100" cy="500" r="200" fill="#251845" opacity="0.5"/>
+  <circle cx="1100" cy="100" r="150" fill="#301860" opacity="0.4"/>
+  
+  <!-- Icon (scaled and positioned left) -->
+  <g transform="translate(100, 100) scale(3.7)">
+    <!-- Outer coin ring -->
+    <path fill="#14F195" fill-rule="evenodd" d="
+      M54,18 A36,36 0 1,1 54,90 A36,36 0 1,1 54,18 Z
+      M54,24 A30,30 0 1,0 54,84 A30,30 0 1,0 54,24 Z"/>
+    <!-- Inner coin face -->
+    <circle cx="54" cy="54" r="26" fill="#0FD182"/>
+    <!-- Center gradient circle -->
+    <circle cx="54" cy="54" r="22" fill="#14F195"/>
+    <!-- Unlock padlock body -->
+    <rect x="44" y="52" width="20" height="16" fill="#FFFFFF"/>
+    <!-- Padlock shackle -->
+    <path fill="#FFFFFF" d="M48,52 L48,44 A6,6 0 0,1 60,44 L60,46 L56,46 L56,44 A2,2 0 0,0 52,44 L52,52 Z"/>
+    <!-- Keyhole -->
+    <circle cx="54" cy="59" r="3" fill="#14F195"/>
+    <path fill="#14F195" d="M52,60 L56,60 L55,66 L53,66 Z"/>
+  </g>
+  
+  <!-- App name -->
+  <text x="550" y="280" font-family="system-ui, -apple-system, sans-serif" font-size="120" font-weight="bold" fill="#FFFFFF">RentQuest</text>
+  
+  <!-- Tagline -->
+  <text x="550" y="360" font-family="system-ui, -apple-system, sans-serif" font-size="36" fill="#14F195">Reclaim your locked SOL</text>
+  
+  <!-- Feature pills -->
+  <g transform="translate(550, 400)">
+    <rect x="0" y="0" width="180" height="40" rx="20" fill="#14F195" opacity="0.2"/>
+    <text x="90" y="27" font-family="system-ui, sans-serif" font-size="18" fill="#14F195" text-anchor="middle">One-Tap Sweep</text>
+    
+    <rect x="200" y="0" width="180" height="40" rx="20" fill="#14F195" opacity="0.2"/>
+    <text x="290" y="27" font-family="system-ui, sans-serif" font-size="18" fill="#14F195" text-anchor="middle">Seed Vault</text>
+    
+    <rect x="400" y="0" width="180" height="40" rx="20" fill="#14F195" opacity="0.2"/>
+    <text x="490" y="27" font-family="system-ui, sans-serif" font-size="18" fill="#14F195" text-anchor="middle">Token-2022</text>
+  </g>
+  
+  <!-- Sparkles -->
+  <path fill="#14F195" opacity="0.6" d="M1050,200 L1055,210 L1065,215 L1055,220 L1050,230 L1045,220 L1035,215 L1045,210 Z"/>
+  <path fill="#FFFFFF" opacity="0.4" d="M950,450 L953,456 L959,459 L953,462 L950,468 L947,462 L941,459 L947,456 Z"/>
+  <path fill="#14F195" opacity="0.5" d="M200,80 L203,86 L209,89 L203,92 L200,98 L197,92 L191,89 L197,86 Z"/>
+</svg>

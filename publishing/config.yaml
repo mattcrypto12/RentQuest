@@ -1,0 +1,68 @@
+publisher:
+  name: Matt Vieten
+  website: https://github.com/mattcrypto12/RentQuest
+  email: matt@rentquest.app
+  support_email: matt@rentquest.app
+app:
+  name: RentQuest
+  address: EV9WiKTLwCSThLJqyXQ1EDBwXS5CCTQDAGnN7ZhjCp6h
+  android_package: com.rentquest.app
+  urls:
+    license_url: https://github.com/mattcrypto12/RentQuest/blob/main/LICENSE
+    copyright_url: https://github.com/mattcrypto12/RentQuest/blob/main/LICENSE
+    privacy_policy_url: https://github.com/mattcrypto12/RentQuest/blob/main/PRIVACY.md
+    website: https://github.com/mattcrypto12/RentQuest
+  media:
+    - purpose: icon
+      uri: media/icon.png
+release:
+  address: 5CAJbtkbBU7nQMZvjLnhBpAP5N6cMuipfLp7nUvQ4aZz
+  media:
+    - purpose: icon
+      uri: media/icon.png
+    - purpose: banner
+      uri: media/banner.png
+    - purpose: screenshot
+      uri: media/screenshot1.png
+    - purpose: screenshot
+      uri: media/screenshot2.png
+    - purpose: screenshot
+      uri: media/screenshot3.png
+    - purpose: screenshot
+      uri: media/screenshot4.png
+  files:
+    - purpose: install
+      uri: media/app-release.apk
+  catalog:
+    en-US:
+      name: RentQuest
+      short_description: Reclaim SOL from dead tokens
+      long_description: |
+        RentQuest helps you recover SOL locked in empty Solana token accounts.
+
+        Every token account on Solana requires a rent deposit (~0.002 SOL). When tokens go to zero, that rent stays locked. Over time, this adds up.
+
+        Features:
+        • Scan your wallet for empty token accounts
+        • See exactly how much SOL you can reclaim
+        • Close accounts in batches with one signature
+        • Works with SPL Token and Token-2022
+        • Secure signing via Seed Vault
+
+        Built for Solana Seeker. Your keys never leave the device.
+      new_in_version: Initial release
+  android_details:
+    cert_fingerprint: 0e1bf5afd90440367df59343842dabc6a55db5a70633ff49d313abb42dfadb2d
+    min_sdk: 26
+    version: 1.0.0
+    version_code: 1
+    locales:
+      - en-US
+solana_mobile_dapp_publisher_portal:
+  testing_instructions: 1. Connect wallet via Seed Vault 2. Tap Scan to find empty token accounts 3. Select accounts and tap Reclaim to close them 4. Verify SOL is returned to your wallet
+lastSubmittedVersionOnChain:
+  address: 5CAJbtkbBU7nQMZvjLnhBpAP5N6cMuipfLp7nUvQ4aZz
+  version_code: 1
+  apk_hash: xXZCivLWCuBPlP3ZGB61zTnlb751LDvVi8VZs5+cRZY=
+lastUpdatedVersionOnStore:
+  address: 5CAJbtkbBU7nQMZvjLnhBpAP5N6cMuipfLp7nUvQ4aZz

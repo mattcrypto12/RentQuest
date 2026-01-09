@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 108 108">
+  <!-- Background -->
+  <rect width="108" height="108" fill="#0D0D1A"/>
+  <circle cx="54" cy="54" r="52" fill="#1A1030"/>
+  <circle cx="54" cy="54" r="40" fill="#251845"/>
+  <circle cx="54" cy="54" r="28" fill="#301860"/>
+  
+  <!-- Outer coin ring -->
+  <path fill="#14F195" fill-rule="evenodd" d="
+    M54,18 A36,36 0 1,1 54,90 A36,36 0 1,1 54,18 Z
+    M54,24 A30,30 0 1,0 54,84 A30,30 0 1,0 54,24 Z"/>
+  
+  <!-- Inner coin face -->
+  <circle cx="54" cy="54" r="26" fill="#0FD182"/>
+  
+  <!-- Center gradient circle -->
+  <circle cx="54" cy="54" r="22" fill="#14F195"/>
+  
+  <!-- Unlock padlock body -->
+  <rect x="44" y="52" width="20" height="16" fill="#FFFFFF"/>
+  
+  <!-- Padlock shackle (open/unlocked) -->
+  <path fill="#FFFFFF" d="
+    M48,52 L48,44 
+    A6,6 0 0,1 60,44 
+    L60,46 L56,46 L56,44 
+    A2,2 0 0,0 52,44 
+    L52,52 Z"/>
+  
+  <!-- Keyhole -->
+  <circle cx="54" cy="59" r="3" fill="#14F195"/>
+  <path fill="#14F195" d="M52,60 L56,60 L55,66 L53,66 Z"/>
+  
+  <!-- Sparkle top-right -->
+  <path fill="#FFFFFF" d="M78,26 L80,30 L84,32 L80,34 L78,38 L76,34 L72,32 L76,30 Z"/>
+  
+  <!-- Sparkle top-left -->
+  <path fill="#FFFFFF" opacity="0.7" d="M30,30 L31,32 L33,33 L31,34 L30,36 L29,34 L27,33 L29,32 Z"/>
+  
+  <!-- Sparkle bottom -->
+  <path fill="#FFFFFF" opacity="0.5" d="M76,72 L77,74 L79,75 L77,76 L76,78 L75,76 L73,75 L75,74 Z"/>
+</svg>

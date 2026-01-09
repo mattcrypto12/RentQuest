@@ -7,6 +7,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.rentquest.app.domain.model.Achievement
 import com.rentquest.app.domain.model.CloseHistoryEntry
 import com.rentquest.app.domain.model.Cluster
+import com.rentquest.app.domain.model.SweepPoints
 import com.rentquest.app.domain.model.UserStats
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -43,6 +44,9 @@ class DataStoreManager(private val context: Context) {
         
         // Onboarding
         private val ONBOARDING_COMPLETE_KEY = booleanPreferencesKey("onboarding_complete")
+        
+        // SWEEP Points - stored per wallet address
+        private val SWEEP_POINTS_JSON_KEY = stringPreferencesKey("sweep_points_json")
     }
     
     // ==================== Settings ====================
@@ -187,6 +191,128 @@ class DataStoreManager(private val context: Context) {
         context.dataStore.edit { prefs ->
             prefs[ONBOARDING_COMPLETE_KEY] = true
         }
+    }
+    
+    // ==================== SWEEP Points ====================
+    
+    /**
+     * Get all SWEEP points for all wallets
+     */
+    val allSweepPointsFlow: Flow<Map<String, SweepPoints>> = context.dataStore.data.map { prefs ->
+        val jsonData = prefs[SWEEP_POINTS_JSON_KEY] ?: "{}"
+        try {
+            json.decodeFromString<Map<String, SweepPoints>>(jsonData)
+        } catch (_: Exception) {
+            emptyMap()
+        }
+    }
+    
+    /**
+     * Get SWEEP points for a specific wallet
+     */
+    fun sweepPointsForWallet(walletAddress: String): Flow<SweepPoints?> {
+        return allSweepPointsFlow.map { it[walletAddress] }
+    }
+    
+    /**
+     * Award SWEEP points to a wallet for accounts swept
+     * Returns the updated SweepPoints and points earned this session
+     */
+    suspend fun awardSweepPoints(walletAddress: String, accountsSwept: Int): Pair<SweepPoints, Int> {
+        val allPoints = allSweepPointsFlow.first().toMutableMap()
+        
+        val current = allPoints[walletAddress] ?: SweepPoints(
+            walletAddress = walletAddress,
+            points = 0,
+            accountsSwept = 0
+        )
+        
+        val previousPoints = current.points
+        val newPoints = SweepPoints.calculateNewPoints(current.points, accountsSwept)
+        val pointsEarned = newPoints - previousPoints
+        
+        val updated = current.copy(
+            points = newPoints,
+            accountsSwept = current.accountsSwept + accountsSwept,
+            lastUpdated = System.currentTimeMillis()
+        )
+        
+        allPoints[walletAddress] = updated
+        
+        context.dataStore.edit { prefs ->
+            prefs[SWEEP_POINTS_JSON_KEY] = json.encodeToString(allPoints)
+        }
+        
+        return updated to pointsEarned
+    }
+    
+    /**
+     * Get total SWEEP points across all wallets (for display)
+     */
+    suspend fun getTotalSweepPoints(): Int {
+        return allSweepPointsFlow.first().values.sumOf { it.points }
+    }
+    
+    /**
+     * Award Twitter share bonus points for a specific close operation
+     * Only awards once per history entry ID to prevent double-claiming
+     * Returns (updated SweepPoints, bonus awarded, was already shared)
+     */
+    suspend fun awardTwitterShareBonus(walletAddress: String, historyId: String, accountsClosed: Int): Triple<SweepPoints, Int, Boolean> {
+        val allPoints = allSweepPointsFlow.first().toMutableMap()
+        
+        val current = allPoints[walletAddress] ?: SweepPoints(
+            walletAddress = walletAddress,
+            points = 0,
+            accountsSwept = 0
+        )
+        
+        // Check if this specific close operation was already shared
+        if (historyId in current.sharedHistoryIds) {
+            return Triple(current, 0, true) // Already shared this one
+        }
+        
+        // Award bonus = accounts closed for this share
+        val bonusPoints = accountsClosed
+        
+        val updated = current.copy(
+            twitterShareCount = current.twitterShareCount + 1,
+            twitterBonusEarned = current.twitterBonusEarned + bonusPoints,
+            sharedHistoryIds = current.sharedHistoryIds + historyId,
+            lastUpdated = System.currentTimeMillis()
+        )
+        
+        allPoints[walletAddress] = updated
+        
+        context.dataStore.edit { prefs ->
+            prefs[SWEEP_POINTS_JSON_KEY] = json.encodeToString(allPoints)
+        }
+        
+        return Triple(updated, bonusPoints, false)
+    }
+    
+    /**
+     * Check if a specific close operation has already been shared
+     */
+    suspend fun hasSharedHistoryEntry(walletAddress: String, historyId: String): Boolean {
+        val allPoints = allSweepPointsFlow.first()
+        val points = allPoints[walletAddress] ?: return false
+        return historyId in points.sharedHistoryIds
+    }
+    
+    /**
+     * Get all wallets and their SWEEP points for airdrop tracking
+     */
+    suspend fun getAllWalletsForAirdrop(): List<SweepPoints> {
+        return allSweepPointsFlow.first().values.toList()
+    }
+    
+    /**
+     * Export all sweep points data as JSON for airdrop snapshot
+     */
+    suspend fun exportSweepPointsSnapshot(): String {
+        val allPoints = allSweepPointsFlow.first()
+        return json.encodeToString(allPoints)
     }
     
     // ==================== Clear All ====================

@@ -1,6 +1,7 @@
 package com.rentquest.app.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -30,6 +31,19 @@ fun HistoryScreen(
     val history by viewModel.history.collectAsState()
     val userStats by viewModel.userStats.collectAsState()
     
+    // State for achievement info modal
+    var selectedAchievement by remember { mutableStateOf<Achievement?>(null) }
+    
+    // Achievement info modal
+    selectedAchievement?.let { achievement ->
+        AchievementInfoModal(
+            achievement = achievement,
+            isUnlocked = achievement in userStats.unlockedAchievementSet,
+            currentProgress = userStats.totalAccountsClosed,
+            onDismiss = { selectedAchievement = null }
+        )
+    }
+    
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -55,7 +69,10 @@ fun HistoryScreen(
             
             // Achievements section
             item {
-                AchievementsSection(stats = userStats)
+                AchievementsSection(
+                    stats = userStats,
+                    onAchievementClick = { selectedAchievement = it }
+                )
             }
             
             // History header
@@ -119,7 +136,7 @@ private fun StatsCard(stats: com.rentquest.app.domain.model.UserStats) {
                 
                 StatItem(
                     value = String.format("%.4f", stats.totalSolReclaimed),
-                    label = "SOL Reclaimed",
+                    label = "Rent Collected",
                     icon = Icons.Default.Savings,
                     color = Emerald400
                 )
@@ -160,7 +177,10 @@ private fun StatItem(
 }
 
 @Composable
-private fun AchievementsSection(stats: com.rentquest.app.domain.model.UserStats) {
+private fun AchievementsSection(
+    stats: com.rentquest.app.domain.model.UserStats,
+    onAchievementClick: (Achievement) -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = SurfaceDark),
@@ -185,7 +205,8 @@ private fun AchievementsSection(stats: com.rentquest.app.domain.model.UserStats)
                     val isUnlocked = achievement in stats.unlockedAchievementSet
                     AchievementBadge(
                         achievement = achievement,
-                        isUnlocked = isUnlocked
+                        isUnlocked = isUnlocked,
+                        onClick = { onAchievementClick(achievement) }
                     )
                 }
             }
@@ -196,11 +217,14 @@ private fun AchievementsSection(stats: com.rentquest.app.domain.model.UserStats)
 @Composable
 private fun AchievementBadge(
     achievement: Achievement,
-    isUnlocked: Boolean
+    isUnlocked: Boolean,
+    onClick: () -> Unit
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.padding(horizontal = 8.dp)
+        modifier = Modifier
+            .padding(horizontal = 8.dp)
+            .clickable { onClick() }
     ) {
         Surface(
             shape = RoundedCornerShape(12.dp),
